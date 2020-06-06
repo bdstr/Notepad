@@ -1,22 +1,19 @@
 package notepad;
 
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Scanner;
+import java.util.Arrays;
 
 public class Controller {
+    private final String directoryPath = ".saved_notes/";
+
     @FXML
     private Font x1;
 
@@ -36,72 +33,109 @@ public class Controller {
     public TextField noteTitle;
 
     @FXML
+    public Button saveTitleButton;
+
+    private Note note;
+    private String selectedNote;
+
+    @FXML
     private void initialize() {
-        notesList.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            try {
-                openSelectedNote(newValue);
-            } catch (FileNotFoundException e) {
-                System.out.println("Error: cannot read note file at path \"" + ".saved_notes/" + newValue + "\"");
-            }
-        });
+        note = new Note(directoryPath);
+        selectedNote = "";
+        blockUserInput();
         listAllNotes();
     }
 
     @FXML
-    void createNoteButtonClick(ActionEvent event) {
-        createNote();
+    public void openNote(MouseEvent mouseEvent) {
+        String title = notesList.getSelectionModel().getSelectedItem();
+        if (!selectedNote.equals(title)) {
+            if (title != null) {
+                try {
+                    note.openNote(title);
+                    selectedNote = title;
+                    displayNote(note);
+                } catch (FileNotFoundException e) {
+                    showError("Error while opening note", "Cannot read note file!", e);
+                }
+            } else {
+                blockUserInput();
+            }
+        }
+    }
+
+    @FXML
+    void createNote() {
+        try {
+            note.createNewNote(directoryPath);
+            listAllNotes();
+            notesList.getSelectionModel().select(note.getTitle());
+            displayNote(note);
+
+        } catch (IOException e) {
+            showError("Error while opening note", "Cannot create note file!", e);
+        }
         listAllNotes();
     }
 
-    private void listAllNotes() {
-        String[] filesInDirectory = getFilesInDirectory(".saved_notes/");
+    @FXML
+    private void saveNote() {
+        String title = noteTitle.getText();
+        String content = noteTextarea.getText();
 
+        try {
+            note.saveNote(title, content);
+            note.openNote(title);
+            listAllNotes();
+            notesList.getSelectionModel().select(title);
+        } catch (IOException e) {
+            showError("Error while saving note", "Cannot save note file!", e);
+        }
+    }
+
+    private void showError(String header, String content, Exception e) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error");
+        alert.setHeaderText(header);
+        alert.setContentText(content + "\n\n" + e.getMessage() + "\n\n");
+
+        blockUserInput();
+        listAllNotes();
+
+        alert.showAndWait();
+    }
+
+    private void listAllNotes() {
+        String[] filesInDirectory = getFilesInDirectory();
         if (filesInDirectory != null) {
+            Arrays.sort(filesInDirectory);
             notesList.getItems().setAll(filesInDirectory);
         }
     }
 
-    private String[] getFilesInDirectory(String path) {
-        File file = new File(path);
+    private String[] getFilesInDirectory() {
+        File file = new File(directoryPath);
         return file.list();
     }
 
-    private void createNote() {
-        LocalDateTime date = LocalDateTime.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_H-m-s");
-        String timeStamp = date.format(formatter);
 
-        String filename = "Note_" + timeStamp;
-        File file = new File(".saved_notes/" + filename);
-        if (!file.getParentFile().exists()) {
-            if (!file.getParentFile().mkdirs()) {
-                System.out.println("Error: directory cannot be created!");
-            }
-        }
-        try {
-            if (file.createNewFile()) {
-                System.out.println("Created file in path: " + file.getPath());
-            } else {
-                System.out.println("Error: file already exists!");
-            }
-        } catch (IOException e) {
-            System.out.println("Error: cannot create file!");
-        }
+    private void displayNote(Note note) {
+        String title = note.getTitle();
+        String content = note.getContent();
+
+        noteTitle.setText(title);
+        noteTextarea.setText(content);
+        saveTitleButton.setDisable(false);
+        noteTitle.setEditable(true);
+        noteTextarea.setEditable(true);
     }
 
-    private void openSelectedNote(String name) throws FileNotFoundException {
-        File file = new File(".saved_notes/" + name);
-        StringBuilder note = new StringBuilder();
-
-        Scanner scanner = new Scanner(file);
-        while (scanner.hasNext()) {
-            note.append(scanner.nextLine()).append("\n");
-        }
-        noteTitle.setText(name);
-        noteTextarea.setText(note.toString());
+    private void blockUserInput() {
+        saveTitleButton.setDisable(true);
+        noteTitle.setText(null);
+        noteTitle.setEditable(false);
+        noteTextarea.setText(null);
+        noteTextarea.setEditable(false);
     }
 
-    private void saveNote() {
-
-    }
 }
