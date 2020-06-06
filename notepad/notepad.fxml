@@ -152,9 +152,25 @@
             </AnchorPane>
         <AnchorPane id="noteDetails">
           <children>
-                  <VBox layoutX="9.0" layoutY="51.0" minWidth="220.0" prefHeight="518.0" prefWidth="220.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                  <VBox layoutX="9.0" layoutY="51.0" minWidth="220.0" prefHeight="518.0" prefWidth="220.0" spacing="15.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                      <children>
                   <Label alignment="CENTER" font="$x1" style="&#10;" text="Note details" textAlignment="CENTER" textFill="$x2" wrapText="false" />
+                        <AnchorPane>
+                           <children>
+                              <Button fx:id="encryptButton" mnemonicParsing="false" onAction="#encryptNote" text="Encrypt note" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                 <graphic>
+                                    <ImageView disable="true" fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
+                                       <image>
+                                          <Image url="@icons/lock_icon.png" />
+                                       </image>
+                                       <viewport>
+                                          <Rectangle2D />
+                                       </viewport>
+                                    </ImageView>
+                                 </graphic>
+                              </Button>
+                           </children>
+                        </AnchorPane>
                      </children>
                      <padding>
                         <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />

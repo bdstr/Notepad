@@ -1,8 +1,10 @@
 package notepad;
 
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 
+import javax.crypto.AEADBadTagException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -22,6 +24,9 @@ public class Controller {
 
     @FXML
     private Button deleteButton;
+
+    @FXML
+    public Button encryptButton;
 
     @FXML
     private TextArea noteTextarea;
@@ -49,9 +54,15 @@ public class Controller {
                 try {
                     note.open(title);
                     selectedNote = title;
+                    if (EncryptedText.isTextEncrypted(note.getContent())) {
+
+
+                        EncryptedText encryptedText = new EncryptedText(note.getContent());
+                        encryptedText.decrypt(password);
+                    }
                     displayNote(note);
                 } catch (FileNotFoundException e) {
-                    showError("Error while opening note", "Cannot read note file!", e);
+                    showError("Error while opening note", e);
                 }
             } else {
                 blockUserInput();
@@ -69,7 +80,7 @@ public class Controller {
             selectedNote = title;
             displayNote(note);
         } catch (IOException e) {
-            showError("Error while opening note", "Cannot create note file!", e);
+            showError("Error while opening note", e);
             listAllNotes();
             blockUserInput();
         }
@@ -86,7 +97,7 @@ public class Controller {
             listAllNotes();
             notesList.getSelectionModel().select(title);
         } catch (IOException e) {
-            showError("Error while saving note", "Cannot save note file!", e);
+            showError("Error while saving note", e);
         }
     }
 
@@ -97,15 +108,41 @@ public class Controller {
             listAllNotes();
             blockUserInput();
         } catch (Exception e) {
-            showError("Error while deleting note", "Cannot delete note file!", e);
+            showError("Error while deleting note", e);
         }
     }
 
-    private void showError(String header, String content, Exception e) {
+    @FXML
+    public void encryptNote() {
+        EncryptedText encryptedNote;
+        try {
+            encryptedNote = new EncryptedText(note.getContent(), "123");
+            System.out.println(encryptedNote.getEncryptedText());
+        } catch (Exception e) {
+            showError("Error while encrypting note", e);
+        }
+
+
+
+/*
+        try {
+            System.out.println(encryptedNote.decrypt("122"));
+            System.out.println(encryptedNote.decrypt("123"));
+        } catch (AEADBadTagException e) {
+            showError("Error while decrypting note", new Exception("Password doesn't match!"));
+        } catch (Exception e) {
+            showError("Error while decrypting note", e);
+        }
+        */
+    }
+
+    private void showError(String header, Exception e) {
+        e.printStackTrace();
         Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setResizable(true);
         alert.setTitle("Error");
         alert.setHeaderText(header);
-        alert.setContentText(content + "\n\n" + e.getMessage() + "\n\n");
+        alert.setContentText(e.getMessage() + "\n");
 
         blockUserInput();
         listAllNotes();
@@ -138,6 +175,7 @@ public class Controller {
     private void blockUserInput() {
         saveButton.setDisable(true);
         deleteButton.setDisable(true);
+        encryptButton.setDisable(true);
         noteTitle.setText(null);
         noteTitle.setEditable(false);
         noteTitle.setDisable(true);
@@ -149,10 +187,10 @@ public class Controller {
     private void allowUserInput() {
         saveButton.setDisable(false);
         deleteButton.setDisable(false);
+        encryptButton.setDisable(false);
         noteTitle.setEditable(true);
         noteTitle.setDisable(false);
         noteTextarea.setEditable(true);
         noteTextarea.setDisable(false);
     }
-
 }

@@ -10,9 +10,10 @@ import java.util.Scanner;
 
 public class Note {
 
+    private final String directoryPath;
     private String title;
     private String content;
-    private final String directoryPath;
+    private boolean isEncrypted;
 
     public Note(String directoryPath) {
         this.directoryPath = directoryPath;
@@ -24,6 +25,10 @@ public class Note {
 
     public String getContent() {
         return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
     }
 
     public void createNew(String directoryPath) throws IOException {
@@ -45,6 +50,7 @@ public class Note {
         }
         title = filename;
         content = "";
+        isEncrypted = false;
     }
 
     public void open(String fileName) throws FileNotFoundException {
@@ -57,6 +63,10 @@ public class Note {
         }
         title = fileName;
         content = note.toString();
+
+        if (EncryptedText.isTextEncrypted(content)) {
+            isEncrypted = true;
+        }
     }
 
     public void save(String title, String content) throws IOException {
