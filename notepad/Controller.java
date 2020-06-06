@@ -2,9 +2,6 @@ package notepad;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -15,16 +12,16 @@ public class Controller {
     private final String directoryPath = ".saved_notes/";
 
     @FXML
-    private Font x1;
-
-    @FXML
-    private Color x2;
-
-    @FXML
     private ListView<String> notesList;
 
     @FXML
     private Button createButton;
+
+    @FXML
+    public Button saveButton;
+
+    @FXML
+    private Button deleteButton;
 
     @FXML
     private TextArea noteTextarea;
@@ -32,8 +29,6 @@ public class Controller {
     @FXML
     public TextField noteTitle;
 
-    @FXML
-    public Button saveTitleButton;
 
     private Note note;
     private String selectedNote;
@@ -47,12 +42,12 @@ public class Controller {
     }
 
     @FXML
-    public void openNote(MouseEvent mouseEvent) {
+    public void openNote() {
         String title = notesList.getSelectionModel().getSelectedItem();
         if (!selectedNote.equals(title)) {
             if (title != null) {
                 try {
-                    note.openNote(title);
+                    note.open(title);
                     selectedNote = title;
                     displayNote(note);
                 } catch (FileNotFoundException e) {
@@ -67,15 +62,17 @@ public class Controller {
     @FXML
     void createNote() {
         try {
-            note.createNewNote(directoryPath);
+            note.createNew(directoryPath);
+            String title = note.getTitle();
             listAllNotes();
-            notesList.getSelectionModel().select(note.getTitle());
+            notesList.getSelectionModel().select(title);
+            selectedNote = title;
             displayNote(note);
-
         } catch (IOException e) {
             showError("Error while opening note", "Cannot create note file!", e);
+            listAllNotes();
+            blockUserInput();
         }
-        listAllNotes();
     }
 
     @FXML
@@ -84,12 +81,23 @@ public class Controller {
         String content = noteTextarea.getText();
 
         try {
-            note.saveNote(title, content);
-            note.openNote(title);
+            note.save(title, content);
+            note.open(title);
             listAllNotes();
             notesList.getSelectionModel().select(title);
         } catch (IOException e) {
             showError("Error while saving note", "Cannot save note file!", e);
+        }
+    }
+
+    @FXML
+    public void deleteNote() {
+        try {
+            note.delete();
+            listAllNotes();
+            blockUserInput();
+        } catch (Exception e) {
+            showError("Error while deleting note", "Cannot delete note file!", e);
         }
     }
 
@@ -118,24 +126,33 @@ public class Controller {
         return file.list();
     }
 
-
     private void displayNote(Note note) {
         String title = note.getTitle();
         String content = note.getContent();
 
         noteTitle.setText(title);
         noteTextarea.setText(content);
-        saveTitleButton.setDisable(false);
-        noteTitle.setEditable(true);
-        noteTextarea.setEditable(true);
+        allowUserInput();
     }
 
     private void blockUserInput() {
-        saveTitleButton.setDisable(true);
+        saveButton.setDisable(true);
+        deleteButton.setDisable(true);
         noteTitle.setText(null);
         noteTitle.setEditable(false);
+        noteTitle.setDisable(true);
         noteTextarea.setText(null);
         noteTextarea.setEditable(false);
+        noteTextarea.setDisable(true);
+    }
+
+    private void allowUserInput() {
+        saveButton.setDisable(false);
+        deleteButton.setDisable(false);
+        noteTitle.setEditable(true);
+        noteTitle.setDisable(false);
+        noteTextarea.setEditable(true);
+        noteTextarea.setDisable(false);
     }
 
 }

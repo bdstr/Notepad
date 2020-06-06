@@ -26,7 +26,7 @@ public class Note {
         return content;
     }
 
-    public void createNewNote(String directoryPath) throws IOException {
+    public void createNew(String directoryPath) throws IOException {
         LocalDateTime date = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
         String timeStamp = date.format(formatter);
@@ -47,7 +47,7 @@ public class Note {
         content = "";
     }
 
-    public void openNote(String fileName) throws FileNotFoundException {
+    public void open(String fileName) throws FileNotFoundException {
         File file = new File(directoryPath + fileName);
         StringBuilder note = new StringBuilder();
 
@@ -59,7 +59,7 @@ public class Note {
         content = note.toString();
     }
 
-    public void saveNote(String title, String content) throws IOException {
+    public void save(String title, String content) throws IOException {
         if (!this.title.equals(title)) {
             File file = new File(directoryPath + this.title);
             File destinationFile = new File(directoryPath + title);
@@ -72,6 +72,13 @@ public class Note {
             FileWriter fileWriter = new FileWriter(directoryPath + title);
             fileWriter.write(content);
             fileWriter.close();
+        }
+    }
+
+    public void delete() throws Exception {
+        File file = new File(directoryPath + title);
+        if (!file.delete()) {
+            throw new Exception("Cannot delete file on path " + directoryPath + title);
         }
     }
 }
