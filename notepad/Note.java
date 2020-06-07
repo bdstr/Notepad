@@ -4,7 +4,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
 
@@ -13,6 +16,7 @@ public class Note {
     private final String directoryPath;
     private String title;
     private String content;
+    private String creationDate;
     private boolean isEncrypted;
     private String password;
 
@@ -30,6 +34,10 @@ public class Note {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public String getCreationDate() {
+        return creationDate;
     }
 
     public boolean isEncrypted() {
@@ -68,9 +76,15 @@ public class Note {
         password = null;
     }
 
-    public void open(String fileName) throws FileNotFoundException {
+    public void open(String fileName) throws IOException {
         File file = new File(directoryPath + fileName);
         StringBuilder note = new StringBuilder();
+
+        BasicFileAttributes creationTimeUnix = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
+
+        LocalDateTime creationDate = LocalDateTime.ofInstant(creationTimeUnix.creationTime().toInstant(), ZoneId.systemDefault());
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        this.creationDate = creationDate.format(formatter);
 
         Scanner scanner = new Scanner(file);
         while (scanner.hasNext()) {

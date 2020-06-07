@@ -18,6 +18,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.paint.Color?>
+<?import javafx.scene.shape.Line?>
 <?import javafx.scene.text.Font?>
 
 <VBox minHeight="480.0" minWidth="640.0" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="notepad.Controller">
@@ -152,9 +153,60 @@
             </AnchorPane>
         <AnchorPane id="noteDetails">
           <children>
-                  <VBox layoutX="9.0" layoutY="51.0" minWidth="220.0" prefHeight="518.0" prefWidth="220.0" spacing="15.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                  <VBox layoutX="9.0" layoutY="51.0" minWidth="220.0" prefHeight="518.0" prefWidth="220.0" spacing="20.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                      <children>
                   <Label alignment="CENTER" font="$x1" style="&#10;" text="Note details" textAlignment="CENTER" textFill="$x2" wrapText="false" />
+                        <VBox spacing="10.0">
+                           <children>
+                              <Label text="Creation time:">
+                                 <font>
+                                    <Font size="14.0" />
+                                 </font>
+                              </Label>
+                              <Label fx:id="creationStatsLabel" text="0">
+                                 <font>
+                                    <Font size="14.0" />
+                                 </font>
+                              </Label>
+                              <Line endX="90.5" startX="-100.0" />
+                              <Label fx:id="wordsStatsLabel" text="0">
+                                 <font>
+                                    <Font size="14.0" />
+                                 </font>
+                                 <graphic>
+                                    <Label text="Words: ">
+                                       <font>
+                                          <Font size="14.0" />
+                                       </font>
+                                    </Label>
+                                 </graphic>
+                              </Label>
+                              <Label fx:id="charactersStatsLabel" text="0">
+                                 <font>
+                                    <Font size="14.0" />
+                                 </font>
+                                 <graphic>
+                                    <Label text="Characters: ">
+                                       <font>
+                                          <Font size="14.0" />
+                                       </font>
+                                    </Label>
+                                 </graphic>
+                              </Label>
+                              <Label fx:id="paragraphsStatsLabel" text="0">
+                                 <font>
+                                    <Font size="14.0" />
+                                 </font>
+                                 <graphic>
+                                    <Label text="Paragraphs: ">
+                                       <font>
+                                          <Font size="14.0" />
+                                       </font>
+                                    </Label>
+                                 </graphic>
+                              </Label>
+                           </children>
+                        </VBox>
                         <AnchorPane>
                            <children>
                               <Button fx:id="encryptButton" mnemonicParsing="false" onAction="#encryptNote" text="Encrypt note" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">

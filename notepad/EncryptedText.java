@@ -33,7 +33,7 @@ public class EncryptedText {
             byte[] decode = Base64.getDecoder().decode(text.trim().getBytes(StandardCharsets.UTF_8));
             ByteBuffer byteBuffer = ByteBuffer.wrap(decode);
             int byteSize = byteBuffer.getInt();
-            return byteSize >= 12 && byteSize < 16;
+            return byteSize == 12;
         } catch (Exception e) {
             return false;
         }

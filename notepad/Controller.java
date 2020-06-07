@@ -1,5 +1,7 @@
 package notepad;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 
@@ -18,19 +20,31 @@ public class Controller {
     private Button createButton;
 
     @FXML
-    public Button saveButton;
+    private TextField noteTitle;
+
+    @FXML
+    private Button saveButton;
 
     @FXML
     private Button deleteButton;
 
     @FXML
-    public Button encryptButton;
-
-    @FXML
     private TextArea noteTextarea;
 
     @FXML
-    public TextField noteTitle;
+    private Label creationStatsLabel;
+
+    @FXML
+    private Label wordsStatsLabel;
+
+    @FXML
+    private Label charactersStatsLabel;
+
+    @FXML
+    private Label paragraphsStatsLabel;
+
+    @FXML
+    private Button encryptButton;
 
 
     private Note note;
@@ -38,6 +52,7 @@ public class Controller {
 
     @FXML
     private void initialize() {
+        noteTextarea.textProperty().addListener((observableValue, s, s2) -> refreshStats());
         note = new Note(directoryPath);
         selectedNote = "";
         blockUserInput();
@@ -63,7 +78,13 @@ public class Controller {
                     }
                     selectedNote = title;
                     displayNote(note);
-                } catch (NullPointerException ignore) {
+                    refreshStats();
+                    creationStatsLabel.setText(note.getCreationDate());
+                } catch (NullPointerException e) {
+                    selectedNote = "";
+                    notesList.getSelectionModel().select(null);
+                    creationStatsLabel.setText("");
+                    blockUserInput();
                 } catch (AEADBadTagException e) {
                     showError("Error while opening note", new Exception("Wrong password"));
                 } catch (Exception e) {
@@ -131,6 +152,14 @@ public class Controller {
         }
     }
 
+    @FXML
+    public void refreshStats() {
+        TextStats stats = new TextStats(noteTextarea.getText());
+        wordsStatsLabel.setText(String.valueOf(stats.getWordNumber()));
+        charactersStatsLabel.setText(String.valueOf(stats.getCharacterNumber()));
+        paragraphsStatsLabel.setText(String.valueOf(stats.getParagraphsNumber()));
+    }
+
     private void showError(String header, Exception e) {
         e.printStackTrace();
         Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -193,6 +222,7 @@ public class Controller {
         noteTextarea.setText(null);
         noteTextarea.setEditable(false);
         noteTextarea.setDisable(true);
+        refreshStats();
     }
 
     private void allowUserInput() {
