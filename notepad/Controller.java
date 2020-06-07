@@ -1,7 +1,6 @@
 package notepad;
 
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 
@@ -158,6 +157,11 @@ public class Controller {
         wordsStatsLabel.setText(String.valueOf(stats.getWordNumber()));
         charactersStatsLabel.setText(String.valueOf(stats.getCharacterNumber()));
         paragraphsStatsLabel.setText(String.valueOf(stats.getParagraphsNumber()));
+    }
+
+    @FXML
+    public void quit(){
+        Platform.exit();
     }
 
     private void showError(String header, Exception e) {

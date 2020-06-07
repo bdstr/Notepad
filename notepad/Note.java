@@ -1,7 +1,6 @@
 package notepad;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -95,6 +94,10 @@ public class Note {
     }
 
     public void save(String title, String content) throws IOException {
+        if (title == null) {
+            throw new IOException("First you need to open a note");
+        }
+
         if (!this.title.equals(title)) {
             File file = new File(directoryPath + this.title);
             File destinationFile = new File(directoryPath + title);
