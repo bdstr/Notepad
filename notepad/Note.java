@@ -14,6 +14,7 @@ public class Note {
     private String title;
     private String content;
     private boolean isEncrypted;
+    private String password;
 
     public Note(String directoryPath) {
         this.directoryPath = directoryPath;
@@ -31,7 +32,21 @@ public class Note {
         this.content = content;
     }
 
-    public void createNew(String directoryPath) throws IOException {
+    public boolean isEncrypted() {
+        return isEncrypted;
+    }
+
+    public void setEncrypted(String password) {
+        isEncrypted = true;
+        this.password = password;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+
+    public void createNew(String directoryPath) throws Exception {
         LocalDateTime date = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
         String timeStamp = date.format(formatter);
@@ -40,17 +55,17 @@ public class Note {
         File file = new File(directoryPath + filename);
         if (!file.getParentFile().exists()) {
             if (!file.getParentFile().mkdirs()) {
-                System.out.println("Error: directory cannot be created!");
+                throw new Exception("Directory cannot be created");
             }
         }
-        if (file.createNewFile()) {
-            System.out.println("Created file in path: " + file.getPath());
-        } else {
-            System.out.println("Error: file already exists!");
+        if (!file.createNewFile()) {
+            throw new Exception("Cannot create file - already exists");
         }
+
         title = filename;
         content = "";
         isEncrypted = false;
+        password = null;
     }
 
     public void open(String fileName) throws FileNotFoundException {
@@ -63,10 +78,6 @@ public class Note {
         }
         title = fileName;
         content = note.toString();
-
-        if (EncryptedText.isTextEncrypted(content)) {
-            isEncrypted = true;
-        }
     }
 
     public void save(String title, String content) throws IOException {

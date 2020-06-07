@@ -7,71 +7,80 @@ import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.security.spec.KeySpec;
+import java.util.Base64;
 
 public class EncryptedText {
-    private final byte[] encryptedText;
+
+
+    private static byte[] getRandomBytes(int numBytes) {
+        byte[] bytes = new byte[numBytes];
+        new SecureRandom().nextBytes(bytes);
+        return bytes;
+    }
+
+    private static SecretKey generateSecretKey(String password, byte[] salt) throws Exception {
+        SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+        KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 256);
+        return new SecretKeySpec(factory.generateSecret(spec).getEncoded(), "AES");
+
+    }
 
     public static boolean isTextEncrypted(String text) {
-        ByteBuffer byteBuffer = ByteBuffer.wrap(text.getBytes());
-        int noonceSize = byteBuffer.getInt();
-        return noonceSize >= 12 && noonceSize < 16;
-    }
-
-    public EncryptedText(String clearTextToEncrypt, String password) throws Exception {
-        this.encryptedText = encrypt(clearTextToEncrypt, password);
-    }
-
-    public EncryptedText(String encryptedText) {
-        this.encryptedText = encryptedText.getBytes();
-    }
-
-    public String getEncryptedText() {
-        return new String(encryptedText);
-    }
-
-    private byte[] encrypt(String text, String password) throws Exception {
-        SecureRandom secureRandom = new SecureRandom();
-        byte[] iv = new byte[12];
-        secureRandom.nextBytes(iv);
-        SecretKey secretKey = generateSecretKey(password, iv);
-        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-        GCMParameterSpec parameterSpec = new GCMParameterSpec(128, iv);
-        cipher.init(Cipher.ENCRYPT_MODE, secretKey, parameterSpec);
-        byte[] encryptedData = cipher.doFinal(text.getBytes());
-        ByteBuffer byteBuffer = ByteBuffer.allocate(4 + iv.length + encryptedData.length);
-        byteBuffer.putInt(iv.length);
-        byteBuffer.put(iv);
-        byteBuffer.put(encryptedData);
-        return byteBuffer.array();
-
-    }
-
-    public String decrypt(String password) throws Exception {
-        ByteBuffer byteBuffer = ByteBuffer.wrap(encryptedText);
-        int noonceSize = byteBuffer.getInt();
-
-        if (noonceSize < 12 || noonceSize >= 16) {
-            throw new IllegalArgumentException("Text is not encrypted!");
+        try {
+            byte[] decode = Base64.getDecoder().decode(text.trim().getBytes(StandardCharsets.UTF_8));
+            ByteBuffer byteBuffer = ByteBuffer.wrap(decode);
+            int byteSize = byteBuffer.getInt();
+            return byteSize >= 12 && byteSize < 16;
+        } catch (Exception e) {
+            return false;
         }
-
-        byte[] iv = new byte[noonceSize];
-        byteBuffer.get(iv);
-        SecretKey secretKey = generateSecretKey(password, iv);
-        byte[] cipherBytes = new byte[byteBuffer.remaining()];
-        byteBuffer.get(cipherBytes);
-        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-        GCMParameterSpec parameterSpec = new GCMParameterSpec(128, iv);
-        cipher.init(Cipher.DECRYPT_MODE, secretKey, parameterSpec);
-
-        return new String(cipher.doFinal(cipherBytes));
     }
 
-    private static SecretKey generateSecretKey(String password, byte[] iv) throws Exception {
-        KeySpec spec = new PBEKeySpec(password.toCharArray(), iv, 65536, 128);
-        SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
-        byte[] key = secretKeyFactory.generateSecret(spec).getEncoded();
-        return new SecretKeySpec(key, "AES");
+    public static String encrypt(String text, String password) throws Exception {
+        byte[] salt = getRandomBytes(16);
+        byte[] iv = getRandomBytes(12);
+
+        SecretKey aesKeyFromPassword = generateSecretKey(password, salt);
+
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        cipher.init(Cipher.ENCRYPT_MODE, aesKeyFromPassword, new GCMParameterSpec(128, iv));
+        byte[] cipherText = cipher.doFinal(text.getBytes(StandardCharsets.UTF_8));
+
+        byte[] cipherTextWithIvSalt = ByteBuffer.allocate(4 + iv.length + salt.length + cipherText.length)
+                .putInt(iv.length)
+                .put(iv)
+                .put(salt)
+                .put(cipherText)
+                .array();
+
+        return Base64.getEncoder().encodeToString(cipherTextWithIvSalt);
+
+    }
+
+    public static String decrypt(String encryptedText, String password) throws Exception {
+        byte[] decode = Base64.getDecoder().decode(encryptedText.trim().getBytes(StandardCharsets.UTF_8));
+        ByteBuffer bb = ByteBuffer.wrap(decode);
+
+        byte[] ivLength = new byte[4];
+        bb.get(ivLength);
+
+        byte[] iv = new byte[12];
+        bb.get(iv);
+
+        byte[] salt = new byte[16];
+        bb.get(salt);
+
+        byte[] cipherText = new byte[bb.remaining()];
+        bb.get(cipherText);
+
+        SecretKey aesKeyFromPassword = generateSecretKey(password, salt);
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        cipher.init(Cipher.DECRYPT_MODE, aesKeyFromPassword, new GCMParameterSpec(128, iv));
+        byte[] plainText = cipher.doFinal(cipherText);
+
+        return new String(plainText, StandardCharsets.UTF_8);
     }
 }

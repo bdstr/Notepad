@@ -1,14 +1,12 @@
 package notepad;
 
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 
 import javax.crypto.AEADBadTagException;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.Arrays;
+import java.util.Optional;
 
 public class Controller {
     private final String directoryPath = ".saved_notes/";
@@ -53,15 +51,22 @@ public class Controller {
             if (title != null) {
                 try {
                     note.open(title);
-                    selectedNote = title;
                     if (EncryptedText.isTextEncrypted(note.getContent())) {
+                        String password = passwordPrompt();
 
-
-                        EncryptedText encryptedText = new EncryptedText(note.getContent());
-                        encryptedText.decrypt(password);
+                        String decryptedText = EncryptedText.decrypt(note.getContent(), password);
+                        note.setContent(decryptedText);
+                        note.setEncrypted(password);
+                        encryptButton.setText("Change password");
+                    } else {
+                        encryptButton.setText("Encrypt note");
                     }
+                    selectedNote = title;
                     displayNote(note);
-                } catch (FileNotFoundException e) {
+                } catch (NullPointerException ignore) {
+                } catch (AEADBadTagException e) {
+                    showError("Error while opening note", new Exception("Wrong password"));
+                } catch (Exception e) {
                     showError("Error while opening note", e);
                 }
             } else {
@@ -79,8 +84,8 @@ public class Controller {
             notesList.getSelectionModel().select(title);
             selectedNote = title;
             displayNote(note);
-        } catch (IOException e) {
-            showError("Error while opening note", e);
+        } catch (Exception e) {
+            showError("Error while creating note", e);
             listAllNotes();
             blockUserInput();
         }
@@ -92,11 +97,14 @@ public class Controller {
         String content = noteTextarea.getText();
 
         try {
+            if (note.isEncrypted()) {
+                content = EncryptedText.encrypt(content, note.getPassword());
+            }
             note.save(title, content);
             note.open(title);
             listAllNotes();
             notesList.getSelectionModel().select(title);
-        } catch (IOException e) {
+        } catch (Exception e) {
             showError("Error while saving note", e);
         }
     }
@@ -114,26 +122,13 @@ public class Controller {
 
     @FXML
     public void encryptNote() {
-        EncryptedText encryptedNote;
         try {
-            encryptedNote = new EncryptedText(note.getContent(), "123");
-            System.out.println(encryptedNote.getEncryptedText());
+            String password = passwordPrompt();
+            note.setEncrypted(password);
+            saveNote();
         } catch (Exception e) {
             showError("Error while encrypting note", e);
         }
-
-
-
-/*
-        try {
-            System.out.println(encryptedNote.decrypt("122"));
-            System.out.println(encryptedNote.decrypt("123"));
-        } catch (AEADBadTagException e) {
-            showError("Error while decrypting note", new Exception("Password doesn't match!"));
-        } catch (Exception e) {
-            showError("Error while decrypting note", e);
-        }
-        */
     }
 
     private void showError(String header, Exception e) {
@@ -148,6 +143,22 @@ public class Controller {
         listAllNotes();
 
         alert.showAndWait();
+    }
+
+    public String passwordPrompt() throws NullPointerException {
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Password prompt");
+        dialog.setHeaderText("Enter password");
+        dialog.setContentText("Please, enter password:");
+        Optional<String> result = dialog.showAndWait();
+        String password;
+
+        if (result.isPresent()) {
+            password = result.get();
+        } else {
+            throw new NullPointerException("Password not provided");
+        }
+        return password;
     }
 
     private void listAllNotes() {
