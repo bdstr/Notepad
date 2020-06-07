@@ -78,11 +78,9 @@ public class Controller {
                     selectedNote = title;
                     displayNote(note);
                     refreshStats();
-                    creationStatsLabel.setText(note.getCreationDate());
                 } catch (NullPointerException e) {
                     selectedNote = "";
                     notesList.getSelectionModel().select(null);
-                    creationStatsLabel.setText("");
                     blockUserInput();
                 } catch (AEADBadTagException e) {
                     showError("Error while opening note", new Exception("Wrong password"));
@@ -160,7 +158,7 @@ public class Controller {
     }
 
     @FXML
-    public void quit(){
+    public void quit() {
         Platform.exit();
     }
 
@@ -213,6 +211,7 @@ public class Controller {
 
         noteTitle.setText(title);
         noteTextarea.setText(content);
+        creationStatsLabel.setText(note.getCreationDate());
         allowUserInput();
     }
 
@@ -226,6 +225,7 @@ public class Controller {
         noteTextarea.setText(null);
         noteTextarea.setEditable(false);
         noteTextarea.setDisable(true);
+        creationStatsLabel.setText("");
         refreshStats();
     }
 
